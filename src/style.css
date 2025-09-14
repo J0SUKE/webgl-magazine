@@ -31,13 +31,12 @@ body {
   min-height: 100dvh;
   z-index: 10;
   position: relative;
+  pointer-events: none;
 }
 
 [data-page] {
   --turn-page: 0;
   --data-page-index: 0;
-  /* transform: rotate(calc(-180deg * var(--turn-page)))
-    translateY(calc((4px * (var(--page-index) * -1)) * var(--turn-page))); */
 
   --delta-index: calc(
     (var(--data-current-page-index) - var(--data-page-index))

@@ -5,6 +5,7 @@ import GUI from "lil-gui"
 import Scroll from "./scroll"
 import gsap from "gsap"
 import { $ } from "./utils/dom"
+import Magazine from "./magazine"
 
 interface Props {
   scroll: Scroll
@@ -25,6 +26,7 @@ export default class Canvas {
   debug: GUI
   scroll: Scroll
   mediaInfoBlock: HTMLDivElement
+  magazine: Magazine
 
   constructor({ scroll }: Props) {
     this.scroll = scroll
@@ -39,11 +41,12 @@ export default class Canvas {
     this.createRenderer()
     this.setSizes()
     this.createRayCaster()
-    //this.createOrbitControls()
+    this.createOrbitControls()
     this.addEventListeners()
     this.createDebug()
+    this.createMagazine()
 
-    this.debug.hide()
+    //this.debug.hide()
 
     this.render()
   }
@@ -60,7 +63,8 @@ export default class Canvas {
       100
     )
     this.scene.add(this.camera)
-    this.camera.position.z = 10
+    this.camera.position.z = 0
+    this.camera.position.y = 10
   }
 
   createOrbitControls() {
@@ -68,6 +72,10 @@ export default class Canvas {
       this.camera,
       this.renderer.domElement
     )
+  }
+
+  createMagazine() {
+    this.magazine = new Magazine({ scene: this.scene, debug: this.debug })
   }
 
   createRenderer() {
