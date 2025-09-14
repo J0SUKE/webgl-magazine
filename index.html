@@ -7,7 +7,39 @@
     <title>Vite + TS</title>
   </head>
   <body>
-    <div id="app" class="relative text-[rgb(22,22,22)]"></div>
+    <div id="app" class="h-[100dvh] flex justify-center items-center">
+      <div
+        data-pages-container
+        class="w-[500px]"
+        style="--data-current-page-index: 0"
+      >
+        <div
+          class="h-[4px] border border-black w-full origin-left bg-red-600 transition-transform duration-1000"
+          data-page
+          style="--data-page-index: 0"
+        ></div>
+        <div
+          class="h-[4px] border border-black w-full origin-left bg-amber-500 transition-transform duration-1000"
+          data-page
+          style="--data-page-index: 1"
+        ></div>
+        <div
+          class="h-[4px] border border-black w-full bg-blue-500 origin-left transition-transform duration-1000"
+          style="--data-page-index: 2"
+          data-page
+        ></div>
+        <div
+          class="h-[4px] border border-black w-full origin-left bg-emerald-400 transition-transform duration-1000"
+          style="--data-page-index: 3"
+          data-page
+        ></div>
+        <div
+          class="h-[4px] border border-black w-full origin-left bg-gray-500 transition-transform duration-1000"
+          style="--data-page-index: 4"
+          data-page
+        ></div>
+      </div>
+    </div>
     <canvas id="webgl"></canvas>
     <script type="module" src="/src/main.ts"></script>
   </body>

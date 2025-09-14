@@ -32,3 +32,17 @@ body {
   z-index: 10;
   position: relative;
 }
+
+[data-page] {
+  --turn-page: 0;
+  --data-page-index: 0;
+  /* transform: rotate(calc(-180deg * var(--turn-page)))
+    translateY(calc((4px * (var(--page-index) * -1)) * var(--turn-page))); */
+
+  --delta-index: calc(
+    (var(--data-current-page-index) - var(--data-page-index))
+  );
+
+  transform: rotate(calc(-180deg * var(--turn-page)))
+    translateY(calc(-4px * (var(--delta-index) * 2 - 1) * var(--turn-page)));
+}
