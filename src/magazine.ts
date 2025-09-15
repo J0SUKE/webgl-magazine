@@ -13,8 +13,8 @@ export default class Magazine {
   instancedMesh: THREE.InstancedMesh
   geometry: THREE.BoxGeometry
   material: THREE.ShaderMaterial
-  meshCount: number = 10
-  pageThickness: number = 0.05
+  meshCount: number = 20
+  pageThickness: number = 0.01
   debug: GUI
   pageDimensions: {
     width: number
@@ -26,8 +26,8 @@ export default class Magazine {
     this.debug = debug
 
     this.pageDimensions = {
-      width: 5,
-      height: 7,
+      width: 2,
+      height: 3,
     }
 
     this.createGeometry()
@@ -38,15 +38,15 @@ export default class Magazine {
       value: 0,
     }
 
-    this.debug
-      .add(progress, "value", 0, 10)
-      .name("Current Page")
-      .onChange((value: number) => {
-        this.material.uniforms.uCurrentPage.value = value
-      })
-      .min(0)
-      .max(this.meshCount)
-      .step(1)
+    // this.debug
+    //   .add(progress, "value", 0, 10)
+    //   .name("Current Page")
+    //   .onChange((value: number) => {
+    //     this.material.uniforms.uCurrentPage.value = value
+    //   })
+    //   .min(0)
+    //   .max(this.meshCount)
+    //   .step(1)
   }
 
   createMaterial() {
@@ -59,6 +59,8 @@ export default class Magazine {
         uCurrentPage: new THREE.Uniform(0),
         uPageThickness: new THREE.Uniform(this.pageThickness),
         uPageWidth: new THREE.Uniform(this.pageDimensions.width),
+        uMeshCount: new THREE.Uniform(this.meshCount),
+        uTime: new THREE.Uniform(0),
       },
     })
   }
@@ -67,7 +69,10 @@ export default class Magazine {
     this.geometry = new THREE.BoxGeometry(
       this.pageDimensions.width,
       this.pageDimensions.height,
-      this.pageThickness
+      this.pageThickness,
+      50,
+      50,
+      1
     )
   }
 
@@ -78,21 +83,21 @@ export default class Magazine {
       this.meshCount
     )
 
-    const positions = new Float32Array(this.meshCount * 3)
+    //const positions = new Float32Array(this.meshCount * 3)
     const aIndex = new Float32Array(this.meshCount)
 
     for (let i = 0; i < this.meshCount; i++) {
-      positions[i * 3] = 0
-      positions[i * 3 + 1] = 0
-      positions[i * 3 + 2] = (-i + this.meshCount / 2) * this.pageThickness
+      // positions[i * 3] = 0
+      // positions[i * 3 + 1] = 0
+      // positions[i * 3 + 2] = (-i + this.meshCount / 2) * this.pageThickness
 
       aIndex[i] = i
     }
 
-    this.instancedMesh.geometry.setAttribute(
-      "aPosition",
-      new THREE.InstancedBufferAttribute(positions, 3)
-    )
+    // this.instancedMesh.geometry.setAttribute(
+    //   "aPosition",
+    //   new THREE.InstancedBufferAttribute(positions, 3)
+    // )
 
     this.instancedMesh.geometry.setAttribute(
       "aIndex",
@@ -100,5 +105,9 @@ export default class Magazine {
     )
 
     this.scene.add(this.instancedMesh)
+  }
+
+  render(time: number) {
+    this.material.uniforms.uTime.value = time
   }
 }

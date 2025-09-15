@@ -45,6 +45,7 @@ export default class Canvas {
     this.addEventListeners()
     this.createDebug()
     this.createMagazine()
+    this.createHelpers()
 
     //this.debug.hide()
 
@@ -63,8 +64,14 @@ export default class Canvas {
       100
     )
     this.scene.add(this.camera)
-    this.camera.position.z = 0
-    this.camera.position.y = 10
+    this.camera.position.z = 5
+    this.camera.position.y = 4
+    //this.camera.position.y = 10
+  }
+
+  createHelpers() {
+    const axesHelper = new THREE.AxesHelper(5)
+    this.scene.add(axesHelper)
   }
 
   createOrbitControls() {
@@ -155,5 +162,6 @@ export default class Canvas {
     this.time = this.clock.getElapsedTime()
 
     this.renderer.render(this.scene, this.camera)
+    this.magazine?.render(this.time)
   }
 }

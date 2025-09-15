@@ -5,8 +5,6 @@ attribute float aIndex;
 uniform float uCurrentPage;
 uniform float uPageThickness;
 uniform float uPageWidth;
-uniform float uMeshCount;
-uniform float uTime;
 
 mat3 getYrotationMatrix(float angle)
 {
@@ -23,25 +21,26 @@ void main()
     
     float PI = 3.14159265359;
 
+    //the page is turned if uCurrentPage >= aIndex-1 =====> uCurrentPage - aIndex >= 1
+    float pageTurned = step(1.,uCurrentPage - aIndex);
+
     // Define the rotation center
-    vec3 rotationCenter = vec3(-uPageWidth*0.5, 0.0, 0.0);
+    vec3 rotationCenter = vec3(-uPageWidth*0.5*pageTurned, 0.0, 0.0);
     
     // Translate position to make rotation center the origin
     vec3 translatedPosition = position - rotationCenter;    
     
     // Apply rotation around the new origin
-    
-    float angle = position.x*0.1 +aIndex*2.*PI/uMeshCount - uTime;
-    
-    vec3 rotatedPosition = getYrotationMatrix(angle) * translatedPosition;
+    vec3 rotatedPosition = getYrotationMatrix(PI*pageTurned) * translatedPosition;
     
     // Translate back to original coordinate system
     rotatedPosition += rotationCenter;
-    rotatedPosition.x += uPageWidth*0.5; // Adjust X position to align pages correctly
     
     // Apply Z-axis translation
 
-    vec3 newPosition = rotatedPosition ;    
+    rotatedPosition.z += -uPageThickness*((floor(uCurrentPage)-aIndex)*2. - 1.)*pageTurned;
+
+    vec3 newPosition = rotatedPosition + aPosition;
 
     vec4 modelPosition = modelMatrix * instanceMatrix * vec4(newPosition, 1.0);    
 
