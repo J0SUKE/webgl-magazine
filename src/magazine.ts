@@ -9,6 +9,18 @@ interface Props {
   debug: GUI
 }
 
+interface ImageInfo {
+  width: number
+  height: number
+  aspectRatio: number
+  uvs: {
+    xStart: number
+    xEnd: number
+    yStart: number
+    yEnd: number
+  }
+}
+
 export default class Magazine {
   scene: THREE.Scene
   instancedMesh: THREE.InstancedMesh
@@ -21,6 +33,8 @@ export default class Magazine {
     width: number
     height: number
   }
+  imageInfos: ImageInfo[] = []
+  atlasTexture: THREE.Texture | null = null
 
   constructor({ scene, debug }: Props) {
     this.scene = scene
@@ -32,49 +46,136 @@ export default class Magazine {
     }
 
     this.createGeometry()
-    this.createMaterial()
-    this.createMeshes()
 
-    let progress = {
-      value: 0,
-    }
+    this.loadTextureAtlas().then(() => {
+      this.createMaterial()
+      this.createMeshes()
 
-    this.debug
-      .add(this.material.uniforms.uRotAcceleration, "value", 0, 1)
-      .name("rotation acceleration")
-      .onChange((value: number) => {
-        this.material.uniforms.uRotAcceleration.value = value
-      })
-      .min(0)
-      .max(1)
-      .step(0.001)
-      .listen()
-
-    let reset = false
-    let anim: gsap.core.Tween
-
-    document.body.addEventListener("click", () => {
-      if (reset) {
-        reset = false
-        anim?.kill()
-        this.material.uniforms.uRotAcceleration.value = 0
-        this.material.uniforms.uInfinitRotation.value = 0
-      } else {
-        reset = true
-        anim = gsap.fromTo(
-          this.material.uniforms.uRotAcceleration,
-          { value: 0 },
-          {
-            value: 1,
-            duration: 3,
-            ease: "power2.inOut",
-            onComplete: () => {
-              this.material.uniforms.uInfinitRotation.value = 1
-            },
-          }
-        )
+      let progress = {
+        value: 0,
       }
+
+      this.debug
+        .add(this.material.uniforms.uProgress, "value", 0, 1)
+        .name("progress")
+        .onChange((value: number) => {
+          this.material.uniforms.uProgress.value = value
+        })
+        .min(0)
+        .max(1)
+        .step(0.001)
+        .listen()
+
+      let reset = false
+      let anim: gsap.core.Timeline
+
+      document.body.addEventListener("click", () => {
+        if (reset) {
+          reset = false
+          anim?.kill()
+          this.material.uniforms.uProgress.value = 0
+          this.material.uniforms.uSplitProgress.value = 0
+        } else {
+          reset = true
+          anim = gsap.timeline()
+
+          anim.fromTo(
+            this.material.uniforms.uProgress,
+            { value: 0 },
+            {
+              value: 1,
+              duration: 4,
+              ease: "power2.inOut",
+            }
+          )
+          anim.fromTo(
+            this.material.uniforms.uSplitProgress,
+            { value: 0 },
+            {
+              value: 1,
+              duration: 1,
+              ease: "power2.inOut",
+            },
+            "-=0.4"
+          )
+        }
+      })
     })
+  }
+
+  async loadTextureAtlas() {
+    // Define your image paths
+    const imagePaths = [
+      "/512/p1.jpg",
+      "/512/p2.jpg",
+      "/512/p3.jpg",
+      "/512/p4.jpg",
+      "/512/p5.jpg",
+      "/512/p6.jpg",
+      "/512/p7.jpg",
+      "/512/p8.jpg",
+      "/512/p9.jpg",
+      "/512/p10.jpg",
+      "/512/p11.jpg",
+      "/512/p12.jpg",
+      "/512/p13.jpg",
+    ]
+
+    // Load all images first to get their dimensions
+    const imagePromises = imagePaths.map((path) => {
+      return new Promise<HTMLImageElement>((resolve) => {
+        const img = new Image()
+        img.onload = () => resolve(img)
+        img.src = path
+      })
+    })
+
+    const images = await Promise.all(imagePromises)
+
+    // Calculate atlas dimensions (for simplicity, we'll stack images vertically)
+    const atlasWidth = Math.max(...images.map((img) => img.width))
+    let totalHeight = 0
+
+    // First pass: calculate total height
+    images.forEach((img) => {
+      totalHeight += img.height
+    })
+
+    // Create canvas with calculated dimensions
+    const canvas = document.createElement("canvas")
+    canvas.width = atlasWidth
+    canvas.height = totalHeight
+    const ctx = canvas.getContext("2d")!
+
+    // Second pass: draw images and calculate normalized coordinates
+    let currentY = 0
+    this.imageInfos = images.map((img) => {
+      const aspectRatio = img.width / img.height
+
+      // Draw the image
+      ctx.drawImage(img, 0, currentY)
+
+      // Calculate normalized coordinates
+
+      const info = {
+        width: img.width,
+        height: img.height,
+        aspectRatio,
+        uvs: {
+          xStart: 0,
+          xEnd: img.width / atlasWidth,
+          yStart: 1 - currentY / totalHeight,
+          yEnd: 1 - (currentY + img.height) / totalHeight,
+        },
+      }
+
+      currentY += img.height
+      return info
+    })
+
+    // Create texture from canvas
+    this.atlasTexture = new THREE.Texture(canvas)
+    this.atlasTexture.needsUpdate = true
   }
 
   createMaterial() {
@@ -84,12 +185,13 @@ export default class Magazine {
       side: THREE.DoubleSide,
       transparent: true,
       uniforms: {
-        uRotAcceleration: new THREE.Uniform(0),
+        uProgress: new THREE.Uniform(0),
+        uSplitProgress: new THREE.Uniform(0),
         uPageThickness: new THREE.Uniform(this.pageThickness),
         uPageWidth: new THREE.Uniform(this.pageDimensions.width),
         uMeshCount: new THREE.Uniform(this.meshCount),
         uTime: new THREE.Uniform(0),
-        uInfinitRotation: new THREE.Uniform(0),
+        uAtlas: new THREE.Uniform(this.atlasTexture),
       },
     })
   }
@@ -112,16 +214,24 @@ export default class Magazine {
       this.meshCount
     )
 
-    //const positions = new Float32Array(this.meshCount * 3)
+    const aTextureCoords = new Float32Array(this.meshCount * 4)
     const aIndex = new Float32Array(this.meshCount)
 
     for (let i = 0; i < this.meshCount; i++) {
-      // positions[i * 3] = 0
-      // positions[i * 3 + 1] = 0
-      // positions[i * 3 + 2] = (-i + this.meshCount / 2) * this.pageThickness
+      const imageIndex = i % this.imageInfos.length
+
+      aTextureCoords[i * 4 + 0] = this.imageInfos[imageIndex].uvs.xStart
+      aTextureCoords[i * 4 + 1] = this.imageInfos[imageIndex].uvs.xEnd
+      aTextureCoords[i * 4 + 2] = this.imageInfos[imageIndex].uvs.yStart
+      aTextureCoords[i * 4 + 3] = this.imageInfos[imageIndex].uvs.yEnd
 
       aIndex[i] = i
     }
+
+    this.instancedMesh.geometry.setAttribute(
+      "aTextureCoords",
+      new THREE.InstancedBufferAttribute(aTextureCoords, 4)
+    )
 
     // this.instancedMesh.geometry.setAttribute(
     //   "aPosition",
@@ -136,7 +246,5 @@ export default class Magazine {
     this.scene.add(this.instancedMesh)
   }
 
-  render(time: number) {
-    this.material.uniforms.uTime.value = time
-  }
+  render(time: number) {}
 }
