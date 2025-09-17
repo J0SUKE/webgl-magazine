@@ -45,7 +45,7 @@ export default class Canvas {
     this.addEventListeners()
     this.createDebug()
     this.createMagazine()
-    this.createHelpers()
+    //this.createHelpers()
 
     //this.debug.hide()
 

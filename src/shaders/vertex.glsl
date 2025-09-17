@@ -7,6 +7,8 @@ uniform float uPageThickness;
 uniform float uPageWidth;
 uniform float uMeshCount;
 uniform float uTime;
+uniform float uRotAcceleration;
+uniform float uInfinitRotation;
 
 mat3 getYrotationMatrix(float angle)
 {
@@ -17,6 +19,10 @@ mat3 getYrotationMatrix(float angle)
     );
 }
 
+float remap(float value, float originMin, float originMax, float destinationMin, float destinationMax)
+{
+    return destinationMin + (value - originMin) * (destinationMax - destinationMin) / (originMax - originMin);
+}
 
 void main()
 {     
@@ -30,9 +36,16 @@ void main()
     vec3 translatedPosition = position - rotationCenter;    
     
     // Apply rotation around the new origin
+
+
     
-    float angle = position.x*0.1 +aIndex*2.*PI/uMeshCount - uTime;
-    
+    float delayBeforeStart = (aIndex / uMeshCount);
+    float effectiveProgress = clamp((uRotAcceleration - delayBeforeStart), 0.0, 1.0);
+
+    float angle = position.x*0.2*uRotAcceleration - uRotAcceleration*2.*PI - effectiveProgress*2.*PI;
+
+
+
     vec3 rotatedPosition = getYrotationMatrix(angle) * translatedPosition;
     
     // Translate back to original coordinate system

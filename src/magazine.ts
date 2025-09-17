@@ -2,6 +2,7 @@ import GUI from "lil-gui"
 import * as THREE from "three"
 import vertexShader from "./shaders/vertex.glsl"
 import fragmentShader from "./shaders/fragment.glsl"
+import gsap from "gsap"
 
 interface Props {
   scene: THREE.Scene
@@ -13,7 +14,7 @@ export default class Magazine {
   instancedMesh: THREE.InstancedMesh
   geometry: THREE.BoxGeometry
   material: THREE.ShaderMaterial
-  meshCount: number = 20
+  meshCount: number = 30
   pageThickness: number = 0.01
   debug: GUI
   pageDimensions: {
@@ -38,15 +39,42 @@ export default class Magazine {
       value: 0,
     }
 
-    // this.debug
-    //   .add(progress, "value", 0, 10)
-    //   .name("Current Page")
-    //   .onChange((value: number) => {
-    //     this.material.uniforms.uCurrentPage.value = value
-    //   })
-    //   .min(0)
-    //   .max(this.meshCount)
-    //   .step(1)
+    this.debug
+      .add(this.material.uniforms.uRotAcceleration, "value", 0, 1)
+      .name("rotation acceleration")
+      .onChange((value: number) => {
+        this.material.uniforms.uRotAcceleration.value = value
+      })
+      .min(0)
+      .max(1)
+      .step(0.001)
+      .listen()
+
+    let reset = false
+    let anim: gsap.core.Tween
+
+    document.body.addEventListener("click", () => {
+      if (reset) {
+        reset = false
+        anim?.kill()
+        this.material.uniforms.uRotAcceleration.value = 0
+        this.material.uniforms.uInfinitRotation.value = 0
+      } else {
+        reset = true
+        anim = gsap.fromTo(
+          this.material.uniforms.uRotAcceleration,
+          { value: 0 },
+          {
+            value: 1,
+            duration: 3,
+            ease: "power2.inOut",
+            onComplete: () => {
+              this.material.uniforms.uInfinitRotation.value = 1
+            },
+          }
+        )
+      }
+    })
   }
 
   createMaterial() {
@@ -56,11 +84,12 @@ export default class Magazine {
       side: THREE.DoubleSide,
       transparent: true,
       uniforms: {
-        uCurrentPage: new THREE.Uniform(0),
+        uRotAcceleration: new THREE.Uniform(0),
         uPageThickness: new THREE.Uniform(this.pageThickness),
         uPageWidth: new THREE.Uniform(this.pageDimensions.width),
         uMeshCount: new THREE.Uniform(this.meshCount),
         uTime: new THREE.Uniform(0),
+        uInfinitRotation: new THREE.Uniform(0),
       },
     })
   }
