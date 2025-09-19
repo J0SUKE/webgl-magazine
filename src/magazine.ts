@@ -28,10 +28,16 @@ export default class Magazine {
   material: THREE.ShaderMaterial
   meshCount: number = 30
   pageThickness: number = 0.01
+  pageSpacing: number = 1
   debug: GUI
   pageDimensions: {
     width: number
     height: number
+  }
+  scrollY: {
+    target: number
+    current: number
+    direction: number
   }
   imageInfos: ImageInfo[] = []
   atlasTexture: THREE.Texture | null = null
@@ -43,6 +49,11 @@ export default class Magazine {
     this.pageDimensions = {
       width: 2,
       height: 3,
+    }
+    this.scrollY = {
+      target: 0,
+      current: 0,
+      direction: -1,
     }
 
     this.createGeometry()
@@ -84,7 +95,8 @@ export default class Magazine {
             { value: 0 },
             {
               value: 1,
-              duration: 4,
+              //duration: 5,
+              duration: 0,
               ease: "power2.inOut",
             }
           )
@@ -93,7 +105,8 @@ export default class Magazine {
             { value: 0 },
             {
               value: 1,
-              duration: 1,
+              //duration: 1,
+              duration: 0,
               ease: "power2.inOut",
             },
             "-=0.4"
@@ -189,9 +202,17 @@ export default class Magazine {
         uSplitProgress: new THREE.Uniform(0),
         uPageThickness: new THREE.Uniform(this.pageThickness),
         uPageWidth: new THREE.Uniform(this.pageDimensions.width),
+        uPageHeight: new THREE.Uniform(this.pageDimensions.height),
         uMeshCount: new THREE.Uniform(this.meshCount),
         uTime: new THREE.Uniform(0),
         uAtlas: new THREE.Uniform(this.atlasTexture),
+        uScrollY: { value: 0 },
+        // Calculate total length of the gallery
+        uMaxX: {
+          value: this.meshCount * 0.5 * this.pageSpacing + this.pageThickness,
+        },
+        uSpeedY: { value: 0 },
+        uPageSpacing: new THREE.Uniform(this.pageSpacing),
       },
     })
   }
@@ -246,5 +267,23 @@ export default class Magazine {
     this.scene.add(this.instancedMesh)
   }
 
-  render(time: number) {}
+  updateScroll(scrollY: number) {
+    this.scrollY.target += scrollY
+
+    this.material.uniforms.uSpeedY.value += scrollY
+  }
+
+  render() {
+    if (this.material) {
+      this.scrollY.current = gsap.utils.interpolate(
+        this.scrollY.current,
+        this.scrollY.target,
+        0.12
+      )
+
+      this.material.uniforms.uScrollY.value = this.scrollY.current
+
+      this.material.uniforms.uSpeedY.value *= 0.835
+    }
+  }
 }

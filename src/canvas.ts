@@ -6,6 +6,7 @@ import Scroll from "./scroll"
 import gsap from "gsap"
 import { $ } from "./utils/dom"
 import Magazine from "./magazine"
+import normalizeWheel from "normalize-wheel"
 
 interface Props {
   scroll: Scroll
@@ -41,7 +42,7 @@ export default class Canvas {
     this.createRenderer()
     this.setSizes()
     this.createRayCaster()
-    this.createOrbitControls()
+    //this.createOrbitControls()
     this.addEventListeners()
     this.createDebug()
     this.createMagazine()
@@ -64,8 +65,10 @@ export default class Canvas {
       100
     )
     this.scene.add(this.camera)
-    this.camera.position.z = 5
-    this.camera.position.y = 4
+    //this.camera.position.z = 2
+    this.camera.position.z = 6
+    //this.camera.position.y = 3
+    //this.camera.position.x = 2
     //this.camera.position.y = 10
   }
 
@@ -141,6 +144,7 @@ export default class Canvas {
   addEventListeners() {
     window.addEventListener("mousemove", this.onMouseMove.bind(this))
     window.addEventListener("resize", this.onResize.bind(this))
+    window.addEventListener("wheel", this.onWheel.bind(this))
   }
 
   onResize() {
@@ -158,10 +162,18 @@ export default class Canvas {
     this.renderer.setSize(this.dimensions.width, this.dimensions.height)
   }
 
+  onWheel(event: MouseEvent) {
+    const normalizedWheel = normalizeWheel(event)
+
+    this.magazine.updateScroll(
+      (normalizedWheel.pixelY * this.sizes.height) / window.innerHeight
+    )
+  }
+
   render() {
     this.time = this.clock.getElapsedTime()
 
     this.renderer.render(this.scene, this.camera)
-    this.magazine?.render(this.time)
+    this.magazine?.render()
   }
 }
