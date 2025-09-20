@@ -22,7 +22,6 @@ varying vec4 vTextureCoords;
 varying float vIndex;
 varying float vRotationProgress;
 varying vec3 vPosition;
-varying float vAngle;
 
 
 
@@ -60,8 +59,6 @@ void main()
     
     float PI = 3.14159265359;
 
-    //vec3 initialXRotatedPosition = getXrotationMatrix(-PI*0.2)*position;
-
 
     // Define the rotation center
     vec3 rotationCenter = vec3(-uPageWidth*0.5, 0.0, 0.0);
@@ -74,8 +71,6 @@ void main()
 
     float rotationAcclerationProgress = remap(uProgress,0.,0.3);
 
-    //float rotationAcclerationProgress = clamp(uProgress,0.,0.5)*2.;
-
     
     float delayBeforeStart = (aIndex / uMeshCount);
     float localRotAccelerationProgress = clamp((rotationAcclerationProgress - delayBeforeStart), 0.0, 1.0);
@@ -87,36 +82,50 @@ void main()
     yAngle += fullSpeedRotationAngle*4.2*PI;    
 
     float stackingAngle = remap(uProgress,0.7,1.);
+    
     yAngle += position.x*0.2*stackingAngle + (1.-localRotAccelerationProgress)*2.*PI*stackingAngle + PI*1.7*stackingAngle;
 
-    vAngle=(aIndex - (uMeshCount-1.)*0.5)*smoothstep(0.8,1.,stackingAngle)*((uPageWidth-translatedPosition.x-1.)*0.005);
-    translatedPosition.z+= vAngle;
-    yAngle+= (aIndex - (uMeshCount-1.)*0.5)*smoothstep(0.8,1.,stackingAngle)*((-pow(translatedPosition.x,2.))*0.001);
+    float pageCrumple = (aIndex - (uMeshCount-1.)*0.5)*smoothstep(0.8,1.,stackingAngle)*((uPageWidth-translatedPosition.x-1.)*0.005);
+    
+    translatedPosition.z+= pageCrumple*(1.-uSplitProgress);
+    
+    float pageCrumpleAngle = (aIndex - (uMeshCount-1.)*0.5)*smoothstep(0.8,1.,stackingAngle)*((-pow(translatedPosition.x,2.))*0.001);
+    yAngle+= pageCrumpleAngle;
 
 
-    translatedPosition.z += (uMeshCount-aIndex) * uPageThickness*smoothstep(0.8,1.,stackingAngle); // Apply stacking effect along Z-axis
+    float stackingPages = (uMeshCount-aIndex) * uPageThickness*smoothstep(0.8,1.,stackingAngle);
+    
+    translatedPosition.z += stackingPages*(1.-uSplitProgress); // Apply stacking effect along Z-axis
 
-    //aIndex goes from 0 to uMeshCount-1
-    //I need an index that goes from -uMeshCount*0.5 to uMeshCount*0.5
-    //float centeredIndex = aIndex - (uMeshCount-1.)*0.5;
+    yAngle-= pageCrumpleAngle*uSplitProgress;
 
     yAngle-=uSplitProgress*PI*0.4;
     
-    translatedPosition.z += uSplitProgress*uPageSpacing*( - (aIndex - (uMeshCount-1.)*0.5));    
-
-    float baseProgress = translatedPosition.z + uScrollY;
-
-    float xPoz = mod(baseProgress,uMaxX) - uMaxX + getXwave((position.y+uPageHeight*0.5)/uPageHeight)*clamp(uSpeedY*2.,-2.,1.3);
+    translatedPosition.z += uSplitProgress*uPageSpacing*( - (aIndex - (uMeshCount-1.)*0.5));        
     
-    translatedPosition.z = xPoz*floor(uSplitProgress);
 
+    // Z Scroll logic----------------------------
+
+    float boxCenterZ = uPageSpacing*( - (aIndex - (uMeshCount-1.)*0.5));        
+    
+    float maxZ = uMeshCount * (uPageSpacing + uPageThickness) * 0.5;
+
+    // Apply wrapping logic to the box center, not individual vertices
+    float centerZProgress = boxCenterZ - uScrollY;
+    float wrappedCenterZ = mod(centerZProgress + maxZ, 2.0 * maxZ) - maxZ;
+    
+    // Apply the same offset to all vertices of the box
+    translatedPosition.z = wrappedCenterZ*step(1.,uSplitProgress) + translatedPosition.z*(1.-step(1.,uSplitProgress));
+
+    //-------------------------------------
+    
     
     vec3 rotatedPosition = getYrotationMatrix(yAngle) * translatedPosition;        
 
     rotatedPosition.z-=uSplitProgress;
-    //rotatedPosition.y+=uSplitProgress*0.5;
+
     
-    float initialRotationProgress = remap(uProgress,0.,0.15);    
+    float initialRotationProgress = remap(uProgress,0.,0.15);
 
 
     // Translate back to original coordinate system
@@ -127,15 +136,42 @@ void main()
     float xAngle = -PI*0.2*initialRotationProgress;
 
     xAngle+=uSplitProgress*PI*0.2;
+    
 
     vec3 newPosition = getXrotationMatrix(xAngle) * rotatedPosition;
-
-    //Scroll logic
-    float maxWave = 0.5;
         
 
+    ////////////////////////tests//////////////////////
 
-    vec4 modelPosition = modelMatrix * instanceMatrix * vec4(newPosition, 1.0);    
+    // vec3 newPosition =  position;    
+    // //newPosition.z += uPageSpacing*( (aIndex - (uMeshCount-1.)*0.5));
+    
+    // // Calculate the box center position first
+    // float boxCenterZ = uPageSpacing*(- (aIndex - (uMeshCount-1.)*0.5));
+    
+    // float maxZ = uMeshCount * (uPageSpacing + uPageThickness) * 0.5;
+
+    // // Apply wrapping logic to the box center, not individual vertices
+    // float centerZProgress = boxCenterZ + uScrollY;
+    // float wrappedCenterZ = mod(centerZProgress + maxZ, 2.0 * maxZ) - maxZ;
+    
+    // // Calculate the offset to apply to all vertices of this box
+    // float zOffset = wrappedCenterZ - boxCenterZ;
+    
+    // // Apply the same offset to all vertices of the box
+    // newPosition.z += boxCenterZ + zOffset;
+    // //newPosition.z= zProgress;
+
+    // newPosition = getYrotationMatrix(PI*0.5) * newPosition;
+    // newPosition.z-=uSplitProgress;
+
+
+
+
+
+    vec4 modelPosition = modelMatrix * instanceMatrix * vec4(newPosition, 1.0);        
+
+    //modelPosition.x = mod(baseX + maxZ, 2.0 * maxZ) - maxZ;
 
     vec4 viewPosition = viewMatrix * modelPosition;
     vec4 projectedPosition = projectionMatrix * viewPosition;
@@ -145,5 +181,5 @@ void main()
     vTextureCoords=aTextureCoords;
     vIndex=aIndex;
     vRotationProgress=localRotAccelerationProgress;
-    vPosition=translatedPosition;
+    //vPosition=translatedPosition;
 }

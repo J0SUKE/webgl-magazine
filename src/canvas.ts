@@ -66,6 +66,7 @@ export default class Canvas {
     )
     this.scene.add(this.camera)
     //this.camera.position.z = 2
+    //this.camera.position.z = 6
     this.camera.position.z = 6
     //this.camera.position.y = 3
     //this.camera.position.x = 2

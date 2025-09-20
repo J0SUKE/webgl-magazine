@@ -5,8 +5,6 @@ uniform sampler2D uAtlas;
 
 varying float vIndex;
 varying float vRotationProgress;
-varying vec3 vPosition;
-varying float vAngle;
 
 
 void main()
@@ -19,7 +17,7 @@ void main()
     float yEnd = vTextureCoords.w;
 
      vec2 atlasUV = vec2(
-        mix(xStart, xEnd, vUv.x),
+        mix(xStart, xEnd, 1.-vUv.x),
         mix(yStart, yEnd, 1.-vUv.y)
     );
 
@@ -31,10 +29,5 @@ void main()
     // Sample the texture
     vec4 color = texture2D(uAtlas, atlasUV);
     
-    
-    float x = vPosition.x;
-    float xOutOfRange = step(vPosition.x,0.) + (1.-step(vPosition.x,1.));
-    
-    //gl_FragColor = vec4(vec3(x,xOutOfRange,xOutOfRange),1.);
     gl_FragColor = color;
 }

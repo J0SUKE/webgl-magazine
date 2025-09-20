@@ -27,6 +27,7 @@ export default class Magazine {
   geometry: THREE.BoxGeometry
   material: THREE.ShaderMaterial
   meshCount: number = 30
+  //meshCount: number = 6
   pageThickness: number = 0.01
   pageSpacing: number = 1
   debug: GUI
@@ -95,8 +96,8 @@ export default class Magazine {
             { value: 0 },
             {
               value: 1,
-              //duration: 5,
-              duration: 0,
+              duration: 5,
+              //duration: 0,
               ease: "power2.inOut",
             }
           )
@@ -105,8 +106,8 @@ export default class Magazine {
             { value: 0 },
             {
               value: 1,
-              //duration: 1,
-              duration: 0,
+              duration: 1,
+              //duration: 0,
               ease: "power2.inOut",
             },
             "-=0.4"
@@ -195,11 +196,11 @@ export default class Magazine {
     this.material = new THREE.ShaderMaterial({
       vertexShader,
       fragmentShader,
-      side: THREE.DoubleSide,
+      //side: THREE.DoubleSide,
       transparent: true,
       uniforms: {
-        uProgress: new THREE.Uniform(0),
-        uSplitProgress: new THREE.Uniform(0),
+        uProgress: new THREE.Uniform(1),
+        uSplitProgress: new THREE.Uniform(1),
         uPageThickness: new THREE.Uniform(this.pageThickness),
         uPageWidth: new THREE.Uniform(this.pageDimensions.width),
         uPageHeight: new THREE.Uniform(this.pageDimensions.height),
@@ -208,9 +209,6 @@ export default class Magazine {
         uAtlas: new THREE.Uniform(this.atlasTexture),
         uScrollY: { value: 0 },
         // Calculate total length of the gallery
-        uMaxX: {
-          value: this.meshCount * 0.5 * this.pageSpacing + this.pageThickness,
-        },
         uSpeedY: { value: 0 },
         uPageSpacing: new THREE.Uniform(this.pageSpacing),
       },
