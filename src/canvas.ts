@@ -86,7 +86,11 @@ export default class Canvas {
   }
 
   createMagazine() {
-    this.magazine = new Magazine({ scene: this.scene, debug: this.debug })
+    this.magazine = new Magazine({
+      scene: this.scene,
+      debug: this.debug,
+      sizes: this.sizes,
+    })
   }
 
   createRenderer() {
@@ -145,7 +149,6 @@ export default class Canvas {
   addEventListeners() {
     window.addEventListener("mousemove", this.onMouseMove.bind(this))
     window.addEventListener("resize", this.onResize.bind(this))
-    window.addEventListener("wheel", this.onWheel.bind(this))
   }
 
   onResize() {
@@ -161,14 +164,8 @@ export default class Canvas {
 
     this.renderer.setPixelRatio(this.dimensions.pixelRatio)
     this.renderer.setSize(this.dimensions.width, this.dimensions.height)
-  }
 
-  onWheel(event: MouseEvent) {
-    const normalizedWheel = normalizeWheel(event)
-
-    this.magazine.updateScroll(
-      (normalizedWheel.pixelY * this.sizes.height) / window.innerHeight
-    )
+    this.magazine?.onResize(this.sizes)
   }
 
   render() {

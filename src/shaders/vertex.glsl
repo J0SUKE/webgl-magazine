@@ -112,10 +112,20 @@ void main()
 
     // Apply wrapping logic to the box center, not individual vertices
     float centerZProgress = boxCenterZ - uScrollY;
-    float wrappedCenterZ = mod(centerZProgress + maxZ, 2.0 * maxZ) - maxZ;
+    float wrappedCenterZ = mod(centerZProgress + maxZ, 2.0 * maxZ) - maxZ - getXwave((position.y+uPageHeight*0.5)/uPageHeight)*clamp(uSpeedY*2.,-2.,1.3);        
+    
+    // Calculate the offset to apply to all vertices of this box
+    float zOffset = wrappedCenterZ - boxCenterZ;
     
     // Apply the same offset to all vertices of the box
-    translatedPosition.z = wrappedCenterZ*step(1.,uSplitProgress) + translatedPosition.z*(1.-step(1.,uSplitProgress));
+    //translatedPosition.z += boxCenterZ + zOffset;
+    translatedPosition.z += zOffset;
+    //newPosition.z= zProgress;
+    
+    
+    
+    
+    //translatedPosition.z = wrappedCenterZ*step(1.,uSplitProgress) + translatedPosition.z*(1.-step(1.,uSplitProgress));
 
     //-------------------------------------
     
@@ -160,7 +170,6 @@ void main()
     
     // // Apply the same offset to all vertices of the box
     // newPosition.z += boxCenterZ + zOffset;
-    // //newPosition.z= zProgress;
 
     // newPosition = getYrotationMatrix(PI*0.5) * newPosition;
     // newPosition.z-=uSplitProgress;

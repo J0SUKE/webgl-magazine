@@ -3,10 +3,13 @@ import * as THREE from "three"
 import vertexShader from "./shaders/vertex.glsl"
 import fragmentShader from "./shaders/fragment.glsl"
 import gsap from "gsap"
+import normalizeWheel from "normalize-wheel"
+import { Size } from "./types/types"
 
 interface Props {
   scene: THREE.Scene
   debug: GUI
+  sizes: Size
 }
 
 interface ImageInfo {
@@ -40,12 +43,14 @@ export default class Magazine {
     current: number
     direction: number
   }
+  sizes: Size
   imageInfos: ImageInfo[] = []
   atlasTexture: THREE.Texture | null = null
 
-  constructor({ scene, debug }: Props) {
+  constructor({ scene, debug, sizes }: Props) {
     this.scene = scene
     this.debug = debug
+    this.sizes = sizes
 
     this.pageDimensions = {
       width: 2,
@@ -80,6 +85,7 @@ export default class Magazine {
 
       let reset = false
       let anim: gsap.core.Timeline
+      let recordScroll = false
 
       document.body.addEventListener("click", () => {
         if (reset) {
@@ -87,6 +93,8 @@ export default class Magazine {
           anim?.kill()
           this.material.uniforms.uProgress.value = 0
           this.material.uniforms.uSplitProgress.value = 0
+          window.removeEventListener("wheel", this.onWheel.bind(this))
+          this.resetScroll()
         } else {
           reset = true
           anim = gsap.timeline()
@@ -112,6 +120,10 @@ export default class Magazine {
             },
             "-=0.4"
           )
+
+          anim.call(() => {
+            window.addEventListener("wheel", this.onWheel.bind(this))
+          })
         }
       })
     })
@@ -215,6 +227,28 @@ export default class Magazine {
     })
   }
 
+  onWheel(event: MouseEvent) {
+    const normalizedWheel = normalizeWheel(event)
+
+    let scrollY =
+      (normalizedWheel.pixelY * this.sizes.height) / window.innerHeight
+
+    this.scrollY.target += scrollY
+
+    this.material.uniforms.uSpeedY.value += scrollY
+  }
+
+  resetScroll() {
+    this.scrollY = {
+      target: 0,
+      current: 0,
+      direction: -1,
+    }
+
+    this.material.uniforms.uSpeedY.value = 0
+    this.material.uniforms.uScrollY.value = 0
+  }
+
   createGeometry() {
     this.geometry = new THREE.BoxGeometry(
       this.pageDimensions.width,
@@ -263,6 +297,10 @@ export default class Magazine {
     )
 
     this.scene.add(this.instancedMesh)
+  }
+
+  onResize(sizes: Size) {
+    this.sizes = sizes
   }
 
   updateScroll(scrollY: number) {
