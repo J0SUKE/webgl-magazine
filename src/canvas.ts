@@ -48,7 +48,7 @@ export default class Canvas {
     this.createMagazine()
     //this.createHelpers()
 
-    //this.debug.hide()
+    this.debug.hide()
 
     this.render()
   }

@@ -72,59 +72,87 @@ export default class Magazine {
         value: 0,
       }
 
-      this.debug
-        .add(this.material.uniforms.uProgress, "value", 0, 1)
-        .name("progress")
-        .onChange((value: number) => {
-          this.material.uniforms.uProgress.value = value
-        })
-        .min(0)
-        .max(1)
-        .step(0.001)
-        .listen()
+      // this.debug
+      //   .add(this.material.uniforms.uProgress, "value", 0, 1)
+      //   .name("progress")
+      //   .onChange((value: number) => {
+      //     this.material.uniforms.uProgress.value = value
+      //   })
+      //   .min(0)
+      //   .max(1)
+      //   .step(0.001)
+      //   .listen()
 
       let reset = false
       let anim: gsap.core.Timeline
       let recordScroll = false
 
-      document.body.addEventListener("click", () => {
-        if (reset) {
-          reset = false
-          anim?.kill()
-          this.material.uniforms.uProgress.value = 0
-          this.material.uniforms.uSplitProgress.value = 0
-          window.removeEventListener("wheel", this.onWheel.bind(this))
-          this.resetScroll()
-        } else {
-          reset = true
-          anim = gsap.timeline()
+      // document.body.addEventListener("click", () => {
+      //   if (reset) {
+      //     reset = false
+      //     anim?.kill()
+      //     this.material.uniforms.uProgress.value = 0
+      //     this.material.uniforms.uSplitProgress.value = 0
+      //     window.removeEventListener("wheel", this.onWheel.bind(this))
+      //     this.resetScroll()
+      //   } else {
+      //     reset = true
+      //     anim = gsap.timeline()
 
-          anim.fromTo(
-            this.material.uniforms.uProgress,
-            { value: 0 },
-            {
-              value: 1,
-              duration: 5,
-              //duration: 0,
-              ease: "power2.inOut",
-            }
-          )
-          anim.fromTo(
-            this.material.uniforms.uSplitProgress,
-            { value: 0 },
-            {
-              value: 1,
-              duration: 1,
-              //duration: 0,
-              ease: "power2.inOut",
-            },
-            "-=0.4"
-          )
+      //     anim.fromTo(
+      //       this.material.uniforms.uProgress,
+      //       { value: 0 },
+      //       {
+      //         value: 1,
+      //         duration: 5,
+      //         //duration: 0,
+      //         ease: "power2.inOut",
+      //       }
+      //     )
+      //     anim.fromTo(
+      //       this.material.uniforms.uSplitProgress,
+      //       { value: 0 },
+      //       {
+      //         value: 1,
+      //         duration: 1,
+      //         //duration: 0,
+      //         ease: "power2.inOut",
+      //       },
+      //       "-=0.6"
+      //     )
 
-          anim.call(() => {
-            window.addEventListener("wheel", this.onWheel.bind(this))
-          })
+      //     anim.call(() => {
+      //       window.addEventListener("wheel", this.onWheel.bind(this))
+      //     })
+      //   }
+      // })
+
+      anim = gsap.timeline()
+
+      anim.fromTo(
+        this.material.uniforms.uProgress,
+        { value: 0 },
+        {
+          value: 1,
+          duration: 5,
+          //duration: 0,
+          ease: "power2.inOut",
         }
+      )
+      anim.fromTo(
+        this.material.uniforms.uSplitProgress,
+        { value: 0 },
+        {
+          value: 1,
+          duration: 1,
+          //duration: 0,
+          ease: "power2.inOut",
+        },
+        "-=0.6"
+      )
+
+      anim.call(() => {
+        window.addEventListener("wheel", this.onWheel.bind(this))
       })
     })
   }
@@ -211,8 +239,8 @@ export default class Magazine {
       //side: THREE.DoubleSide,
       transparent: true,
       uniforms: {
-        uProgress: new THREE.Uniform(1),
-        uSplitProgress: new THREE.Uniform(1),
+        uProgress: new THREE.Uniform(0),
+        uSplitProgress: new THREE.Uniform(0),
         uPageThickness: new THREE.Uniform(this.pageThickness),
         uPageWidth: new THREE.Uniform(this.pageDimensions.width),
         uPageHeight: new THREE.Uniform(this.pageDimensions.height),
