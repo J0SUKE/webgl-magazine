@@ -117,8 +117,6 @@ void main()
     // Calculate the offset to apply to all vertices of this box
     float zOffset = wrappedCenterZ - boxCenterZ;
     
-    // Apply the same offset to all vertices of the box
-    //translatedPosition.z += boxCenterZ + zOffset;
     translatedPosition.z += zOffset;
     //newPosition.z= zProgress;
     
