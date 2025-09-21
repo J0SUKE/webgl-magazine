@@ -47,6 +47,13 @@ export default class Magazine {
   imageInfos: ImageInfo[] = []
   atlasTexture: THREE.Texture | null = null
 
+  // Touch handling properties
+  touch: {
+    startY: number
+    lastY: number
+    isActive: boolean
+  }
+
   constructor({ scene, debug, sizes }: Props) {
     this.scene = scene
     this.debug = debug
@@ -60,6 +67,12 @@ export default class Magazine {
       target: 0,
       current: 0,
       direction: -1,
+    }
+
+    this.touch = {
+      startY: 0,
+      lastY: 0,
+      isActive: false,
     }
 
     this.createGeometry()
@@ -153,6 +166,7 @@ export default class Magazine {
 
       anim.call(() => {
         window.addEventListener("wheel", this.onWheel.bind(this))
+        this.addTouchListeners()
       })
     })
   }
@@ -266,11 +280,64 @@ export default class Magazine {
     this.material.uniforms.uSpeedY.value += scrollY
   }
 
+  addTouchListeners() {
+    window.addEventListener("touchstart", this.onTouchStart.bind(this), {
+      passive: false,
+    })
+    window.addEventListener("touchmove", this.onTouchMove.bind(this), {
+      passive: false,
+    })
+    window.addEventListener("touchend", this.onTouchEnd.bind(this), {
+      passive: false,
+    })
+  }
+
+  removeTouchListeners() {
+    window.removeEventListener("touchstart", this.onTouchStart.bind(this))
+    window.removeEventListener("touchmove", this.onTouchMove.bind(this))
+    window.removeEventListener("touchend", this.onTouchEnd.bind(this))
+  }
+
+  onTouchStart(event: TouchEvent) {
+    event.preventDefault()
+    const touch = event.touches[0]
+    this.touch.startY = touch.clientY
+    this.touch.lastY = touch.clientY
+    this.touch.isActive = true
+  }
+
+  onTouchMove(event: TouchEvent) {
+    if (!this.touch.isActive) return
+
+    event.preventDefault()
+    const touch = event.touches[0]
+    const deltaY = (this.touch.lastY - touch.clientY) * 1.5
+
+    // Scale the touch movement to match wheel sensitivity
+    const scrollY = ((deltaY * this.sizes.height) / window.innerHeight) * 2
+
+    this.scrollY.target -= scrollY
+    this.material.uniforms.uSpeedY.value -= scrollY
+
+    this.touch.lastY = touch.clientY
+  }
+
+  onTouchEnd(event: TouchEvent) {
+    event.preventDefault()
+    this.touch.isActive = false
+  }
+
   resetScroll() {
     this.scrollY = {
       target: 0,
       current: 0,
       direction: -1,
+    }
+
+    this.touch = {
+      startY: 0,
+      lastY: 0,
+      isActive: false,
     }
 
     this.material.uniforms.uSpeedY.value = 0
