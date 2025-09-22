@@ -49,8 +49,8 @@ export default class Magazine {
 
   // Touch handling properties
   touch: {
-    startY: number
-    lastY: number
+    startX: number
+    lastX: number
     isActive: boolean
   }
 
@@ -70,8 +70,8 @@ export default class Magazine {
     }
 
     this.touch = {
-      startY: 0,
-      lastY: 0,
+      startX: 0,
+      lastX: 0,
       isActive: false,
     }
 
@@ -301,8 +301,8 @@ export default class Magazine {
   onTouchStart(event: TouchEvent) {
     event.preventDefault()
     const touch = event.touches[0]
-    this.touch.startY = touch.clientY
-    this.touch.lastY = touch.clientY
+    this.touch.startX = touch.clientX
+    this.touch.lastX = touch.clientX
     this.touch.isActive = true
   }
 
@@ -311,15 +311,15 @@ export default class Magazine {
 
     event.preventDefault()
     const touch = event.touches[0]
-    const deltaY = (this.touch.lastY - touch.clientY) * 1.5
+    const deltaX = this.touch.lastX - touch.clientX
 
     // Scale the touch movement to match wheel sensitivity
-    const scrollY = ((deltaY * this.sizes.height) / window.innerHeight) * 2
+    const scrollY = ((deltaX * this.sizes.height) / window.innerHeight) * 2
 
-    this.scrollY.target -= scrollY
-    this.material.uniforms.uSpeedY.value -= scrollY
+    this.scrollY.target += scrollY
+    this.material.uniforms.uSpeedY.value += scrollY
 
-    this.touch.lastY = touch.clientY
+    this.touch.lastX = touch.clientX
   }
 
   onTouchEnd(event: TouchEvent) {
@@ -335,8 +335,8 @@ export default class Magazine {
     }
 
     this.touch = {
-      startY: 0,
-      lastY: 0,
+      startX: 0,
+      lastX: 0,
       isActive: false,
     }
 
