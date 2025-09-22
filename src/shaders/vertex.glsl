@@ -112,7 +112,7 @@ void main()
 
     // Apply wrapping logic to the box center, not individual vertices
     float centerZProgress = boxCenterZ - uScrollY;
-    float wrappedCenterZ = mod(centerZProgress + maxZ, 2.0 * maxZ) - maxZ - getXwave((position.y+uPageHeight*0.5)/uPageHeight)*clamp(uSpeedY*2.,-1.3,1.3    );        
+    float wrappedCenterZ = mod(centerZProgress + maxZ, 2.0 * maxZ) - maxZ - getXwave((position.y+uPageHeight*0.5)/uPageHeight)*clamp(uSpeedY*2.,-2.,2.    ); 
     
     // Calculate the offset to apply to all vertices of this box
     float zOffset = wrappedCenterZ - boxCenterZ;
